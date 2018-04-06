@@ -3,7 +3,7 @@ A Simple Web Scraper using BeautifulSoup that fetches data based on queries. Use
 
 ##Dependencies
 This repo works on Python3 using libraries BeatifulSoup and requests.
-`pip3 install bs4`
+`pip3 install bs4`\n
 `pip3 install requests`
 
 ##Please feel free to suggest any changes or your queries to [Manas Bedmutha](manasbedmutha98@gmail.com)
