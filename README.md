@@ -6,4 +6,5 @@ This repo works on Python3 using libraries BeatifulSoup and requests. Installati
 `pip3 install bs4`<br/>
 `pip3 install requests`
 
-## Please feel free to suggest any changes or your queries to [Manas Bedmutha](manasbedmutha98@gmail.com)
+## Feedback
+Please feel free to suggest any changes or your queries to [Manas Bedmutha](manasbedmutha98@gmail.com)
