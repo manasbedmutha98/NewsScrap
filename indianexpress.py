@@ -7,58 +7,63 @@ def retrieve(field, soup):
 	if(field.lower() ==("time")):
 		ans = soup.find("meta",  property="article:published_time")
 		if(ans!=None):
-			return ans["content"]
+			return ans["content"].strip().replace("\n","\t")
 		else:
 			return "NA"
 
 	if(field.lower() ==("language")):
 		ans = soup.find('meta', itemprop="inLanguage")
 		if(ans!=None):
-			return ans["content"]
+			return ans["content"].strip().replace("\n","\t")
 		else:
 			return "NA"
 		
 	if(field.lower() ==("newskeywords")):
 		ans = soup.find("meta", attrs={'name':'news_keywords'})
 		if(ans!=None):
-			return ans["content"]
+			return ans["content"].strip().replace("\n","\t")
 		else:
 			return "NA"
 
 	if(field.lower() ==("keywords")):
 		ans = soup.find("meta", attrs={'name':'keywords'})
 		if(ans!=None):
-			return ans["content"]
+			return ans["content"].strip().replace("\n","\t")
 		else:
 			return "NA"
 
 	if(field.lower() ==("author")):
 		ans = soup.find('meta', itemprop="author")
 		if(ans!=None):
-			return ans["content"]
+			return ans["content"].strip().replace("\n","\t")
 		else:
 			return "NA"
 
 	if(field.lower() ==("headline")):
 		ans = soup.find("meta",  property="og:title")
 		if(ans!=None):
-			return ans["content"]
+			return ans["content"].strip().replace("\n","\t")
 		else:
 			return "NA"
 
 	if(field.lower() ==("synopsis")):
 		ans = soup.find("meta",  property="og:description")
 		if(ans!=None):
-			return ans["content"]
+			return ans["content"].strip().replace("\n","\t")
 		else:
 			return "NA"
 
 	if(field.lower() ==("coverpic")):
 		ans = soup.find("meta",  property="og:image")
 		if(ans!=None):
-			return ans["content"]
+			return ans["content"].strip().replace("\n","\t")
 		else:
 			return "NA"
+
+	if(field.lower() ==("body")):
+		ans = soup.find('div', attrs={'class': 'full-details'})
+		return ans
+			
 
 def getdata(url):
 	Data = []
@@ -76,32 +81,45 @@ def getdata(url):
 	Synopsis = retrieve("synopsis",soup)
 	CoverPic = retrieve("coverpic",soup)
 	#print(Time," * ",Language," * ", Author," * ", Headline," * ", Synopsis," * ",CoverPic,"*",Keywords,"*",NewsKeywords, " 8 ",url )
-
-	#print(Time," * ",Language," * ", Author," * ", Headline," * ", Synopsis," * ",CoverPic," 8 ",url )
-	# heading = soup.find('h1', itemprop="headline").getText()
-	# synopsis = soup.find('h2', itemprop="description").getText()
+	Comments = "NA1"
+	try:
+		for each_div in soup.findAll('div',{'class':'comment-body'}):
+			Commenter = each_div.find('div', attrs={'class': 'commenter-name'}).text
+			CommentTime = each_div.find('div', attrs={'class': 'datetime'}).text
+			CommentText = each_div.find('div', attrs={'class': 'comment-content'}).text
+			CommentFull = "["+Commenter+", "+CommentTime+", "+CommentText+"]"
+			Comments = Comments+";"+CommentFull
+	except:
+		 Comments = "NA"
 	
-	Body = soup.find('div', attrs={'class': 'full-details'})
-	body = ""
-	for each_div in Body.findAll('p'):
-		body = body + " "+ each_div.getText()
-	body.replace("\n","\t")
-	#print(len(body))
-	#print(type(NewsKeywords))
-	Article = [sitename, Headline, url, Author, Synopsis, CoverPic, NewsKeywords, Keywords, body]
+	
+	Body = retrieve("body",soup)
+	if(Body):
+		body = ""
+		for each_div in Body.findAll('p'):
+			body = body + " "+ (each_div.getText()).replace("\n"," ")
+
+		body = body.replace("\n"," ")
+		#print(len(body))
+		#print(type(NewsKeywords))
+	else:
+		body = "NA"
+
+
+	Article = [sitename, Headline, url, Author, Synopsis, 
+	CoverPic, NewsKeywords, Keywords, body, Comments]
 	#print (Article)
 	Data = "~".join(Article)
-	Data = Data + "\n"
 	print("\nNext")
 	
 	return Data
 
-def main (query, loc):
+def main (queryIn, loc):
 	global sitename
 	sitename = "Indian Express"
 	print(sitename)
 	#query =["IIT","Gandhinagar"]
-	query = "+".join(query).lower()
+	query = "+".join(queryIn).lower()
 	url = "indianexpress.com/?s="+query
 	print (url)
 	r  = requests.get("http://" +url)
@@ -119,7 +137,8 @@ def main (query, loc):
 	for each_div in SearchRetr.findAll('div',{'class':'details'}):
 		headline = each_div.find('p')
 		ArticleLink = each_div.find('a', recursive = True)['href']
-		Article = getdata(ArticleLink)
+		print([query.replace("+",",")])
+		Article = getdata(ArticleLink)+"~"+query.replace("+",",")+"\n"
 		#print (Article)
 		file = open(loc, "a")
 		#out = csv.writer(file)
@@ -128,8 +147,9 @@ def main (query, loc):
 		#file.write(Article)
 
 	for i in range(2,int(TotalArticles)//16):
-		url = "indianexpress.com/page/"+str(i)+"/?s="+query
+		url = ("indianexpress.com/page/"+str(i)+"/?s="+query).lower()
 		print (url)
+
 		r  = requests.get("http://" +url)
 		data = r.text
 		MainSoup = BeautifulSoup(data,"lxml")
@@ -139,7 +159,7 @@ def main (query, loc):
 		for each_div in SearchRetr.findAll('div',{'class':'details'}):
 			headline = each_div.find('p')
 			ArticleLink = each_div.find('a', recursive = True)['href']
-			Article = getdata(ArticleLink)
+			Article = getdata(ArticleLink)+"~"+query.replace("+",",")+"\n"
 			file = open(loc, "a")
 			#out = csv.writer(file)
 			file.write(Article)
